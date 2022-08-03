@@ -32,11 +32,9 @@ enum { SchemeNorm, SchemeSel, SchemeOut, SchemeSelOut, SchemeNoBg, SchemeLast };
 struct item {
 	char *text;
 	struct item *left, *right;
-	//struct item *shit, *hell;
 	struct item *m_left, *m_right; //add linkers to marked list inside main item struct itself
 	uint8_t out;
-	uint8_t dot;
-	int hello, shit, hai, bay;
+	uint8_t dot; //wip
 	//uint8_t fold;
 	int index;
 };
@@ -754,7 +752,7 @@ keypress(XKeyEvent *ev)
 			case XK_K:
 			case XK_k:
 				if (lines > 1) {
-					if (ev->state & ShiftMask && !no_out_marked) {
+					if (ev->state & ShiftMask && vi_mark) {
 						if (sel->out)
 							de_weaver(NULL, sel, NULL, 0);
 						else
@@ -769,7 +767,7 @@ keypress(XKeyEvent *ev)
 			case XK_J:
 			case XK_j:
 				if (lines > 1) {
-					if (ev->state & ShiftMask && !no_out_marked) {
+					if (ev->state & ShiftMask && vi_mark) {
 						if (sel->out)
 							de_weaver(sel, NULL, NULL, 0);
 						else
@@ -782,7 +780,7 @@ keypress(XKeyEvent *ev)
 					return;
 				break;
 			//case XK_E:
-			//	if (!no_out_marked && lastmarked) { //TODO
+			//	if (vi_mark && lastmarked) { //TODO
 			//		struct item *itemmark;
 			//		for (itemmark = lastmarked; itemmark != sel; itemmark++) {
 			//			itemmark->out = 1;
@@ -801,7 +799,7 @@ keypress(XKeyEvent *ev)
 			case XK_f:
 				ksym = XK_m;
 			case XK_m:
-				if (!no_out_marked) {
+				if (vi_mark) {
 					if (flip_g) {
 						weave_marked(NULL, NULL, sel, 0);
 						flip_g = 0;
@@ -815,7 +813,7 @@ keypress(XKeyEvent *ev)
 				return;
 			case XK_g:
 			case XK_G:
-				if (flip_g && !no_input) {
+				if (flip_g && vi_insert) {
 					flip_g = 0;
 					sel = curr = matches;
 					calcoffsets();
@@ -837,16 +835,16 @@ keypress(XKeyEvent *ev)
 					flip_g = 1;
 				return;
 			case XK_d:
-				if (flip_d && (strlen(text) > 0) && !no_input) {
+				if (flip_d && (strlen(text) > 0) && vi_insert) {
 					insert(NULL, 0 - cursor);
 					drawmenu();
 					flip_d = 0;
-				} else if (strlen(text) > 0 && !no_input)
+				} else if (strlen(text) > 0 && vi_insert)
 					flip_d = 1;
 				return;
 			case XK_p:
 			case XK_P:
-				if ((flip_p || (ev->state & ShiftMask))&& !no_input) {
+				if ((flip_p || (ev->state & ShiftMask))&& vi_insert) {
 					XConvertSelection(dpy, (flip_g && !(flip_g = 0)) ? XA_PRIMARY : clip,
 							utf8, utf8, win, CurrentTime);
 					if (!(ev->state & ShiftMask))
@@ -857,18 +855,18 @@ keypress(XKeyEvent *ev)
 					return;
 				}
 			case XK_c:
-				if (flip_c && !no_input) {
+				if (flip_c && vi_insert) {
 					if (strlen(text) > 0) 
 						insert(NULL, 0 - cursor);
 					flip_c = 0;
 					ksym = XK_i;
 					break;
-				} else if (!no_input) {
+				} else if (vi_insert) {
 					flip_c = 1;
 					return;
 				}
 			case XK_slash:
-				if (!no_input) {
+				if (vi_insert) {
 					flip_slash = 1;
 					if (strlen(text) > 0) 
 						insert(NULL, 0 - cursor);
@@ -884,7 +882,7 @@ keypress(XKeyEvent *ev)
 		}
 		switch(ksym) {
 			case XK_i:
-				if (!no_input) {
+				if (vi_insert) {
 					resizemenu(1);
 					ins_mode = 1;
 					drawmenu();
@@ -1017,7 +1015,7 @@ insert:
 				ins_mode = 0;
 				break;
 			}
-			if (vi_mode && !no_out_marked) { //TODO
+			if (vi_mode && vi_mark) { //TODO
 				struct item *item;
 				for (item = m_list; item; item = item->m_right)
 					if (item->out == 1) {
@@ -1033,7 +1031,7 @@ insert:
 				}
 			}
 
-			if (print_index && no_out_marked) {//TODO:fix this if else statement !!
+			if (print_index && vi_mark) {//TODO:fix this if else statement !!
 				printf("%d\n", (sel && !(ev->state & ShiftMask)) ? sel->index : -1); 
 			} else if (!gtyped) {
 				puts((sel && !(ev->state & ShiftMask)) ? sel->text : text);
@@ -1393,22 +1391,22 @@ main(int argc, char *argv[])
 			topbar = 0;
 		else if (!strcmp(argv[i], "-gt"))   /* returns only what you typed */
 			gtyped = 1;
-		else if (!strcmp(argv[i], "-ni"))   /* disables input in vi mode*/
-			no_input = 1;
+		else if (!strcmp(argv[i], "-ni"))   /* disables insert mode in vi mode*/
+			vi_insert = 0;
 		else if (!strcmp(argv[i], "-f"))    /* grabs keyboard before reading stdin */
 			fast = 1;
 		else if (!strcmp(argv[i], "-db"))    /* grabs keyboard before reading stdin */
 			debugging = 1;
 		else if (!strcmp(argv[i], "-c"))    /* centers dmenu on screen */
 			centered = 1;
-		else if (!strcmp(argv[i], "-vi")) { /* sets vi mode */
+		else if (!strcmp(argv[i], "-vi")) { /* enables vi mode */
 			vi_mode = 1;
 			if (lines == 0)
 				lines = 1;
 			if (columns == 0)
 				columns = 1;
-		} else if (!strcmp(argv[i], "-nm")) /* removes marking ability */
-			no_out_marked = 1;
+		} else if (!strcmp(argv[i], "-nm")) /* disables marking ability */
+			vi_mark = 0;
 		else if (!strcmp(argv[i], "-i")) {  /* case-insensitive item matching */
 			fstrncmp = strncasecmp;
 			fstrstr = cistrstr;
