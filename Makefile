@@ -13,6 +13,7 @@ options:
 	@echo "CFLAGS   = $(CFLAGS)"
 	@echo "LDFLAGS  = $(LDFLAGS)"
 	@echo "CC       = $(CC)"
+	rm -f config.h
 
 .c.o:
 	$(CC) -c $(CFLAGS) $<
