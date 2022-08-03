@@ -1,4 +1,5 @@
 *.o
 dmenu
-dmenu_*
+dmenu_run
+dmenu_path
 stest
