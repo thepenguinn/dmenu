@@ -53,7 +53,6 @@ static struct item *items = NULL;
 static struct item *matches, *matchend;
 static struct item *prev, *curr, *next, *sel;
 static int mon = -1, screen;
-static int print_index = 0;
 
 static Atom clip, utf8;
 static Display *dpy;
@@ -655,7 +654,6 @@ keypress(XKeyEvent *ev)
 	KeySym ksym;
 	Status status;
 	int i, offscreen = 0;
-	int getthesel = 0;
 	struct item *tmpsel;
 
 	len = XmbLookupString(xic, ev, buf, sizeof buf, &ksym, &status);
@@ -779,14 +777,14 @@ keypress(XKeyEvent *ev)
 				} else
 					return;
 				break;
-			//case XK_E:
-			//	if (vi_mark && lastmarked) { //TODO
-			//		struct item *itemmark;
-			//		for (itemmark = lastmarked; itemmark != sel; itemmark++) {
-			//			itemmark->out = 1;
-			//		}
-			//		sel->out = 1;
-			//	}
+				//case XK_E:
+				//	if (vi_mark && lastmarked) { //TODO
+				//		struct item *itemmark;
+				//		for (itemmark = lastmarked; itemmark != sel; itemmark++) {
+				//			itemmark->out = 1;
+				//		}
+				//		sel->out = 1;
+				//	}
 			case XK_w:
 				if (flip_g) {
 					ch_border_col(0);
@@ -1014,29 +1012,39 @@ insert:
 				flip_p = flip_slash = 0;
 				ins_mode = 0;
 				break;
-			}
-			if (vi_mode && vi_mark) { //TODO
-				struct item *item;
-				for (item = m_list; item; item = item->m_right)
-					if (item->out == 1) {
-						puts(item->text);
-						getthesel = 1;
-						if (print_index)
+			} else if (vi_mode) {
+				if (vi_mark && m_list) {
+					struct item *item;
+					for (item = m_list; item; item = item->m_right) {
+						if (!item->out)
+							continue;
+						if (print_only_index)
 							printf("%d\n", item->index);
+						else {
+							if (print_index)
+								printf("%d\t", item->index);
+							puts(item->text);
+						}
 					}
-				if (!getthesel) {
-					puts(sel->text);
-					if (print_index)
+				} else if (!m_list && sel) {
+					if (print_only_index) 
 						printf("%d\n", sel->index);
+					else {
+						if (print_index)
+							printf("%d\t", sel->index);
+						puts(sel->text);
+					}
+				}
+			} else {
+				if (print_only_index && !gtyped)
+					printf("%d\n", (sel && !(ev->state & ShiftMask)) ? sel->index : -1); 
+				else if (sel) {
+					if (print_index)
+						printf("%d\t", sel->index);
+					puts((!(ev->state & ShiftMask) || gtyped) ? sel->text : text);
 				}
 			}
 
-			if (print_index && vi_mark) {//TODO:fix this if else statement !!
-				printf("%d\n", (sel && !(ev->state & ShiftMask)) ? sel->index : -1); 
-			} else if (!gtyped) {
-				puts((sel && !(ev->state & ShiftMask)) ? sel->text : text);
-			} else
-				puts(text);
 			if (!(ev->state & ControlMask)) {
 				cleanup();
 				exit(0);
@@ -1412,6 +1420,8 @@ main(int argc, char *argv[])
 			fstrstr = cistrstr;
 		} else if (!strcmp(argv[i], "-ix")) /* adds ability to return index in list */
 			print_index = 1;
+		} else if (!strcmp(argv[i], "-oix")) /* adds ability to return index in list */
+			print_only_index = print_index = 1;
 		else if (i + 1 == argc)
 			usage();
 		/* these options take one argument */

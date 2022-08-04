@@ -2,10 +2,6 @@
 /* Default settings; can be overriden by command line. */
 
 static int topbar = 1;       /* -b  option; if 0, dmenu appears at bottom     */
-static int vi_mode = 0;      /* -n option; if 0, no vi mode */
-static int ins_mode = 0;     /* for insert mode */
-static int no_input = 0;     /* -ni option; if 1 disables input in vi mode */
-static int no_out_marked = 0;/* -no option; if 1, disables marking in vi mode */
 static int centered = 0;     /* -c option; centers dmenu on screen */
 static int att_edge = 0;     /* 0 disabled, 1 top, 2 bottom, 3 right, 4 left NOTE: Doest not work if -c is enabled*/
 static int egapp = 0;        /* gap between edge and menu when att_edge is enabled*/
@@ -51,6 +47,16 @@ static unsigned int min_lineheight = 8;
 /* -w option; minimum width of a menu line */
 static unsigned int linewidth = 0;
 static unsigned int min_linewidth = 8;
+
+/* vi mode */
+static int vi_mode = 0;       /* -vi option; if 0, no vi mode */
+static int vi_insert = 1;     /* -ni option; if 0 disables input in vi mode */
+static int vi_mark = 1;       /* -nm option; if 0, disables marking in vi mode */
+static int ins_mode = 0;      /* for insert mode */
+
+/* print index */
+static int print_index = 0;   /* -ix option; if 1 prints index, prints index in the same line seperated by a tab if vi_mode is enabled */
+static int print_only_index = 0; /* -oix option; prints only index even if vi_mode is enabled. If you enable this print_index will also be enabled */
 
 /* draw dot for some reason */
 // static int dot_rad = 0;
