@@ -374,7 +374,7 @@ static int
 drawitem(struct item *item, int x, int y, int w)
 {
 	if (item == sel)
-		if (item->marked == 1)
+		if (item->marked && !use_dots)
 			drw_setscheme(drw, scheme[SchemeSelOut]);
 		else
 			drw_setscheme(drw, scheme[SchemeSel]);
@@ -425,9 +425,9 @@ drawmenu(void)
 
 	}
 
-	if (lines > 0) {
+	if (lines > 0) { //TODO: Fix this, use floatttt!!
 		/* draw grid */
-		Fnt *pt;
+		Fnt *pre_font;
 		int i = 0;
 		int cent = 0;
 		int flip = 0;
@@ -454,16 +454,15 @@ drawmenu(void)
 					ftwidth);
 
 			//drw_setscheme(drw, scheme[SchemeNoBg]); //TODO:
-			if (item->dot) {
-				pt = drw->fonts;
+			if (use_dots) { // needs more shaping
+				pre_font = drw->fonts;
 				drw->fonts = drw->fonts->next;
 				drw_text(drw,
 						x + ((i / lines) *  ((mw - x) / columns)) - promptw,
 						y + (((i % lines) + 1) * bh) + 3 * (bh / 4) + border_width,
 						//ftwidth , bh / 4, (ftwidth / 2) - (drw_fontset_getwidth(drw, "◉") / 2), "◉", 0);
-					ftwidth , bh / 4, (ftwidth / 2) - (drw_fontset_getwidth(drw, "✺") / 2), "✺", 0);
-				drw->fonts = drw->fonts->next;
-				drw->fonts = pt;
+					ftwidth , bh / 4, (ftwidth / 2) - (drw_fontset_getwidth(drw, dot_char) / 2), dot_char, 0);
+				drw->fonts = pre_font;
 			}
 
 		}
@@ -564,14 +563,15 @@ match(void)
 	textsize = strlen(text) + 1;
 	for (item = items; item && item->text; item++) {
 
-		if (dots) {
-			if (!strcmp(strtok(item->text, "	"), "***")) {
-				strcpy(item->text, strtok(NULL, "	"));
-				item->dot = 1;
+		if (pre_mark && !strcmp(strtok(item->text, "	"), "***")) {
+			strcpy(item->text, strtok(NULL, "	"));
+			if (m_list && m_end) {
+				weaver(m_end, item, NULL);
+				m_end = item;
 			} else
-				item->dot = 0;
-		} else
-			item->dot = 0;
+				m_list = m_end = item;
+			item->marked = 1;
+		}
 
 		for (i = 0; i < tokc; i++)
 			if (!fstrstr(item->text, tokv[i]))
@@ -586,6 +586,7 @@ match(void)
 		else
 			appenditem(item, &lsubstr, &substrend);
 	}
+	pre_mark = 0; /* Disabling it because we want mark only once, at the first call of this function */
 	if (lprefix) {
 		if (matches) {
 			matchend->right = lprefix;
@@ -1420,8 +1421,10 @@ main(int argc, char *argv[])
 			fstrstr = cistrstr;
 		} else if (!strcmp(argv[i], "-ix")) /* adds ability to return index in list */
 			print_index = 1;
-		} else if (!strcmp(argv[i], "-oix")) /* adds ability to return index in list */
+		else if (!strcmp(argv[i], "-oix")) /* adds ability to return index in list */
 			print_only_index = print_index = 1;
+		else if (!strcmp(argv[i], "-dt")) /* uses dots instead of a different color */
+			use_dots = 1;
 		else if (i + 1 == argc)
 			usage();
 		/* these options take one argument */
@@ -1460,6 +1463,8 @@ main(int argc, char *argv[])
 			mon = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "-p"))   /* adds prompt to left of input field */
 			prompt = argv[++i];
+		else if (!strcmp(argv[i], "-dc"))   /* dot charecter or charecters */
+			dot_char = argv[++i];
 		else if (!strcmp(argv[i], "-fn"))  /* font or font set */
 			fonts[0] = argv[++i];
 		else if (!strcmp(argv[i], "-nb"))  /* normal background color */
