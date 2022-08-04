@@ -429,16 +429,17 @@ drawmenu(void)
 		/* draw grid */
 		Fnt *pre_font;
 		int i = 0;
-		int cent = 0;
-		int flip = 0;
-		int col_num = 0;
-		int jfillit = 0; /* giving higher column value (like ~20) will make this */
-		int ftwidth = 0; /* worse 'cause we're just filling the last one */
+		//int cent = 0;
+		//int flip = 0;
+		//int col_num = 0;
+		//int jfillit = 0; /* giving higher column value (like ~20) will make this */
+		float xcord = 0; /* worse 'cause we're just filling the last one */
+		float col_width = mw / columns;
 		for (item = curr; item != next; item = item->right, i++) {
 				
-			if (i % lines == 0) {
-				col_num += 1;
-				if (flip == 0) //TODO: lots of todos
+			/*if (i % lines == 0) { //TODO:now we are using a float instead of this hack 
+				col_num += 1;       // But we need to test this
+				if (flip == 0) 
 					jfillit += ftwidth;
 			}
 			if (col_num == columns) { 
@@ -446,19 +447,24 @@ drawmenu(void)
 				flip = 1;
 			} else {
 				ftwidth = (mw - x) / columns;
+			}*/
+
+			if (!(i % lines)) {
+				xcord += col_width;
 			}
-			drawitem(
-					item,
-					x + ((i / lines) *  ((mw - x) / columns)) - promptw,
+
+			drawitem(item,
+					//x + ((i / lines) * ((mw - x) / columns)) - promptw,
+					x + xcord,
 					y + (((i % lines) + 1) * bh),
-					ftwidth);
+					col_width);
 
 			//drw_setscheme(drw, scheme[SchemeNoBg]); //TODO:
 			if (use_dots) { // needs more shaping
 				pre_font = drw->fonts;
 				drw->fonts = drw->fonts->next;
 				drw_text(drw,
-						x + ((i / lines) *  ((mw - x) / columns)) - promptw,
+						x + ((i / lines) * ((mw - x) / columns)) - promptw,
 						y + (((i % lines) + 1) * bh) + 3 * (bh / 4) + border_width,
 						//ftwidth , bh / 4, (ftwidth / 2) - (drw_fontset_getwidth(drw, "◉") / 2), "◉", 0);
 					ftwidth , bh / 4, (ftwidth / 2) - (drw_fontset_getwidth(drw, dot_char) / 2), dot_char, 0);
