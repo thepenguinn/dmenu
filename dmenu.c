@@ -33,7 +33,7 @@ struct item {
 	char *text;
 	struct item *left, *right;
 	struct item *m_left, *m_right; //add linkers to marked list inside main item struct itself
-	uint8_t out;
+	uint8_t marked;
 	uint8_t dot; //wip
 	//uint8_t fold;
 	int index;
@@ -92,7 +92,7 @@ appenditem(struct item *item, struct item **list, struct item **last)
 static void
 weaver(struct item *pre, struct item *mid, struct item *nex) {
 
-	mid->out = 1;
+	mid->marked = 1;
 	mid->m_left = pre;
 	mid->m_right = nex;
 	if (nex)
@@ -120,25 +120,25 @@ de_weaver(struct item *umark, struct item *ltoumark, struct item *midumark, int 
 
 		f_break = ltoumark;
 		l_break = ltoumark->m_right;
-		for (cur = ltoumark; cur && cur->out; cur = nex) {
+		for (cur = ltoumark; cur && cur->marked; cur = nex) {
 			nex = cur->left;
 			f_break = cur->m_left;
-			cur->out = 0;
+			cur->marked = 0;
 			cur->m_left = cur->m_right = NULL;
 		}
 	} else if (!ltoumark) {
 		l_break = umark;
 		f_break = umark->m_left;
-		for (cur = umark; cur && cur->out; cur = nex) {
+		for (cur = umark; cur && cur->marked; cur = nex) {
 			nex = cur->right;
 			l_break = cur->m_right;
-			cur->out = 0;
+			cur->marked = 0;
 			cur->m_left = cur->m_right = NULL;
 		}
 	} else if (umark == ltoumark) {
 		f_break = umark->m_left;
 		l_break = umark->m_right;
-		umark->out = 0;
+		umark->marked = 0;
 		umark->m_left = umark->m_right = NULL;
 	} else
 		return;
@@ -256,44 +256,44 @@ weave_marked(struct item *mark, struct item *ltomark, struct item *midmark, int 
 	if (!m_list) {
 		if (mark) {
 			m_list = m_end = mark;
-			mark->out = 1;
+			mark->marked = 1;
 			if (mark != ltomark)
 				mark = (all) ? mark + 1 : mark->right;
 			else
 				return;
 		} else if (ltomark) {
 			m_list = m_end = ltomark;
-			ltomark->out = 1;
+			ltomark->marked = 1;
 			if (mark != ltomark)
 				ltomark = (all) ? mark - 1 : ltomark->left;
 			else
 				return;
 		} else if (midmark) {
 			m_list = m_end = midmark;
-			midmark->out = 1;
+			midmark->marked = 1;
 		}
 	}
 
 	if (!mark && !ltomark) {
-		if (midmark && midmark->out) {
+		if (midmark && midmark->marked) {
 			if (midmark->left)
-				for (m_item = midmark, cur = midmark->left; cur && !cur->out;)
+				for (m_item = midmark, cur = midmark->left; cur && !cur->marked;)
 					weave_back(&m_item, &cur);
 			if (midmark->right)
-				for (m_item = midmark, cur = midmark->right; cur && !cur->out;)
+				for (m_item = midmark, cur = midmark->right; cur && !cur->marked;)
 					weave_front(&m_item, &cur);
 		} else {
-			for (m_item = m_end, cur = midmark; cur && !cur->out;)
+			for (m_item = m_end, cur = midmark; cur && !cur->marked;)
 				weave_back(&m_item, &cur);
 			if (midmark->right)
-				for (m_item = midmark, cur = midmark->right; cur && !cur->out;)
+				for (m_item = midmark, cur = midmark->right; cur && !cur->marked;)
 					weave_front(&m_item, &cur);
 		}
 	} else if (!mark) {
-		for (m_item = m_end, cur = ltomark; cur && !cur->out;)
+		for (m_item = m_end, cur = ltomark; cur && !cur->marked;)
 			weave_back(&m_item, &cur);
 	} else if (!ltomark) {
-		for (m_item = m_list, cur = mark; cur && !cur->out;)
+		for (m_item = m_list, cur = mark; cur && !cur->marked;)
 			weave_front(&m_item, &cur);
 	} else if (mark == ltomark)
 		for (m_item = m_list, cur = mark; cur && cur->left != ltomark;)
@@ -374,11 +374,11 @@ static int
 drawitem(struct item *item, int x, int y, int w)
 {
 	if (item == sel)
-		if (item->out == 1)
+		if (item->marked == 1)
 			drw_setscheme(drw, scheme[SchemeSelOut]);
 		else
 			drw_setscheme(drw, scheme[SchemeSel]);
-	else if (item->out)
+	else if (item->marked)
 		drw_setscheme(drw, scheme[SchemeOut]);
 	else
 		drw_setscheme(drw, scheme[SchemeNorm]);
@@ -751,7 +751,7 @@ keypress(XKeyEvent *ev)
 			case XK_k:
 				if (lines > 1) {
 					if (ev->state & ShiftMask && vi_mark) {
-						if (sel->out)
+						if (sel->marked)
 							de_weaver(NULL, sel, NULL, 0);
 						else
 							weave_marked(NULL, sel, NULL, 0);
@@ -766,7 +766,7 @@ keypress(XKeyEvent *ev)
 			case XK_j:
 				if (lines > 1) {
 					if (ev->state & ShiftMask && vi_mark) {
-						if (sel->out)
+						if (sel->marked)
 							de_weaver(sel, NULL, NULL, 0);
 						else
 							weave_marked(sel, NULL, NULL, 0);
@@ -781,9 +781,9 @@ keypress(XKeyEvent *ev)
 				//	if (vi_mark && lastmarked) { //TODO
 				//		struct item *itemmark;
 				//		for (itemmark = lastmarked; itemmark != sel; itemmark++) {
-				//			itemmark->out = 1;
+				//			itemmark->marked = 1;
 				//		}
-				//		sel->out = 1;
+				//		sel->marked = 1;
 				//	}
 			case XK_w:
 				if (flip_g) {
@@ -802,7 +802,7 @@ keypress(XKeyEvent *ev)
 						weave_marked(NULL, NULL, sel, 0);
 						flip_g = 0;
 					} else
-						if (sel->out)
+						if (sel->marked)
 							de_weaver(sel, sel, NULL, 0);
 						else
 							weave_marked(sel, sel, NULL, 0);
@@ -1016,7 +1016,7 @@ insert:
 				if (vi_mark && m_list) {
 					struct item *item;
 					for (item = m_list; item; item = item->m_right) {
-						if (!item->out)
+						if (!item->marked)
 							continue;
 						if (print_only_index)
 							printf("%d\n", item->index);
@@ -1050,7 +1050,7 @@ insert:
 				exit(0);
 			}
 			if (sel)
-				sel->out = 1;
+				sel->marked = 1;
 			break;
 		case XK_Right:
 			if (columns > 1) {
@@ -1137,7 +1137,7 @@ readstdin(void)
 			*p = '\0';
 		if (!(items[i].text = strdup(buf)))
 			die("cannot strdup %zu bytes:", strlen(buf) + 1);
-		items[i].out = 0;
+		items[i].marked = 0;
 		items[i].index = i;
 		items[i].m_right = items[i].m_left = NULL;
 	}
