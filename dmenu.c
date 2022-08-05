@@ -34,8 +34,7 @@ struct item {
 	struct item *left, *right;
 	struct item *m_left, *m_right; //add linkers to marked list inside main item struct itself
 	uint8_t marked;
-	uint8_t dot; //wip
-	//uint8_t fold;
+	uint8_t fold;
 	int index;
 };
 
@@ -569,7 +568,7 @@ match(void)
 	textsize = strlen(text) + 1;
 	for (item = items; item && item->text; item++) {
 
-		if (pre_mark && !strcmp(strtok(item->text, "	"), "***")) {
+		if (pre_mark && !strcmp(strtok(item->text, "	"), "---")) {
 			strcpy(item->text, strtok(NULL, "	"));
 			if (m_list && m_end) {
 				weaver(m_end, item, NULL);
