@@ -568,7 +568,7 @@ match(void)
 	textsize = strlen(text) + 1;
 	for (item = items; item && item->text; item++) {
 
-		if (pre_mark && !strcmp(strtok(item->text, "	"), "---")) {
+		if (pre_mark && !strcmp(strtok(item->text, "	"), "***")) {
 			strcpy(item->text, strtok(NULL, "	"));
 			if (m_list && m_end) {
 				weaver(m_end, item, NULL);
