@@ -4,7 +4,7 @@ This is my build of [suckless's](https://suckless.org) [dmenu](https://tools.suc
 For more information on building and configuring dmenu, vist dmenu's home
 [page](https://tools.suckless.org/dmenu/).
 
-# This is broken build
+# This is a broken build
 
 I think I messed something up, for some reason dmenu doesn't show up when
 invoked. Need to debug.
