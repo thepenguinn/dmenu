@@ -13,14 +13,20 @@ XINERAMALIBS  = -lXinerama
 XINERAMAFLAGS = -DXINERAMA
 
 # freetype
-FREETYPELIBS = -lfontconfig -lXft
-FREETYPEINC = /usr/include/freetype2
+FREETYPELIBS = -lfontconfig -lXft \
+FREETYPEINC = /usr/include/freetype2 \
 # OpenBSD (uncomment)
 #FREETYPEINC = $(X11INC)/freetype2
 #MANPREFIX = ${PREFIX}/man
 
+PKG_CONFIG = pkg-config
+
 # includes and libs
-INCS = -I$(X11INC) -I$(FREETYPEINC)
+INCS = -I${X11INC} -I${FREETYPEINC} \
+       `$(PKG_CONFIG) --cflags fontconfig` \
+       `$(PKG_CONFIG) --cflags freetype2`
+# LIBS = -L${X11LIB} -lX11 ${XINERAMALIBS} ${FREETYPELIBS} -lX11-xcb -lxcb -lxcb-res ${KVMLIB}
+
 LIBS = -L$(X11LIB) -lX11 $(XINERAMALIBS) $(FREETYPELIBS)
 
 # flags

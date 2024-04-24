@@ -49,10 +49,14 @@ static unsigned int linewidth = 0;
 static unsigned int min_linewidth = 8;
 
 /* vi mode */
-static int vi_mode = 0;       /* -vi option; if 0, no vi mode */
-static int vi_insert = 1;     /* -ni option; if 0 disables input in vi mode */
-static int vi_mark = 1;       /* -nm option; if 0, disables marking in vi mode */
-static int ins_mode = 0;      /* for insert mode */
+static int vi_mode   = 0;    /* -vi option; if 0, no vi mode */
+static int vi_insert = 1;    /* -ni option; if 0 disables input in vi mode */
+static int vi_mark   = 1;    /* -nm option; if 0, disables marking in vi mode */
+static int ins_mode  = 0;    /* for insert mode */
+static int pre_mark  = 0;    /* -pm option; if enabled, *** followed by a tab in the beginning will mark the item */
+static int use_dots  = 0;    /* -dt option; if 1 uses dots to denote marked items */
+static char *dot_char = "✺"; /* -dc option; specify which char */
+
 
 /* print index */
 static int print_index = 0;   /* -ix option; if 1 prints index, prints index in the same line seperated by a tab if vi_mode is enabled */
